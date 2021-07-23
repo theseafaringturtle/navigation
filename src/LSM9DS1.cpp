@@ -60,7 +60,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
     // 1 = 14.9    4 = 238
     // 2 = 59.5    5 = 476
     // 3 = 119     6 = 952
-    settings.gyro.sampleRate = 6;
+    settings.gyro.sampleRate = 3;
     // gyro cutoff frequency: value between 0-3
     // Actual value of cutoff frequency depends
     // on sample rate.
@@ -77,7 +77,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
     settings.gyro.orientation = 0;
     settings.gyro.latchInterrupt = true;
 
-    settings.accel.enabled = true;
+    settings.accel.enabled = false;
     settings.accel.enableX = true;
     settings.accel.enableY = true;
     settings.accel.enableZ = true;
@@ -87,7 +87,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
     // 1 = 10 Hz    4 = 238 Hz
     // 2 = 50 Hz    5 = 476 Hz
     // 3 = 119 Hz   6 = 952 Hz
-    settings.accel.sampleRate = 6;
+    settings.accel.sampleRate = 4;
     // Accel cutoff freqeuncy can be any value between -1 - 3.
     // -1 = bandwidth determined by sample rate
     // 0 = 408 Hz   2 = 105 Hz
@@ -100,7 +100,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
     // 1 = ODR/100   3 = ODR/400
     settings.accel.highResBandwidth = 0;
 
-    settings.mag.enabled = true;
+    settings.mag.enabled = false;
     // mag scale can be 4, 8, 12, or 16
     settings.mag.scale = 4;
     // mag data rate can be 0-7
@@ -120,7 +120,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
     // 0 = continuous conversion
     // 1 = single-conversion
     // 2 = power down
-    settings.mag.operatingMode = 0;
+    settings.mag.operatingMode = 2;
 
     settings.temp.enabled = true;
     for (int i=0; i<3; i++)
@@ -789,6 +789,31 @@ void LSM9DS1::configInt(interrupt_select interrupt, uint8_t generator,
     if (pushPull) temp &= ~(1<<4);
     else temp |= (1<<4);
 
+    xgWriteByte(CTRL_REG8, temp);
+}
+
+void LSM9DS1::configBDU(bool accelGyroBDU, bool magBDU)
+{
+    // Configure CTRL_REG8
+    uint8_t xg_temp;
+    xg_temp = xgReadByte(CTRL_REG8);
+
+    if (accelGyroBDU) xg_temp |= (1<<6);
+    else xg_temp &= ~(1<<6);
+    xgWriteByte(CTRL_REG8, xg_temp);
+
+    uint8_t mag_temp;
+    mag_temp = xgReadByte(CTRL_REG5_M);
+
+    if (magBDU) mag_temp |= (1<<6);
+    else mag_temp &= ~(1<<6);
+    xgWriteByte(CTRL_REG5_M, mag_temp);
+}
+
+void LSM9DS1::softReset() {
+    uint8_t temp;
+    temp = xgReadByte(CTRL_REG8);
+    temp |= 0x1;
     xgWriteByte(CTRL_REG8, temp);
 }
 

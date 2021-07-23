@@ -285,6 +285,11 @@ public:
     //      Can be either INT_PUSH_PULL or INT_OPEN_DRAIN
     void configInt(interrupt_select interupt, uint8_t generator,
                    h_lactive activeLow = INT_ACTIVE_LOW, pp_od pushPull = INT_PUSH_PULL);
+
+    void configBDU(bool accelGyroBDU, bool magBDU);
+
+    // softReset() -- perform a software reset by writing 1 to SW_RESET in CTRL_REG8
+    void softReset();
                    
     // configMagInt() -- Configure Magnetometer Interrupt Generator
     // Input:
