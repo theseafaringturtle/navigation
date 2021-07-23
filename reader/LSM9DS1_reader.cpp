@@ -7,7 +7,7 @@
 #include "LSM9DS1_Types.h"
 #include "LSM9DS1.h"
 
-#include <wiringPi.h>
+#include <pigpio.h>
 #include "reader.h"
 #include "delta_time.h"
 
@@ -17,10 +17,10 @@ struct timespec delta;
 bool running = false;
 bool interrupting = false;
 
-void IMUReader::gyro_isr()
+void IMUReader::gyro_isr(int gpio, int level, uint32_t tick)
 {
   // printf("ISR called\n");
-  if (!running)
+  if (level != RISING_EDGE || !running)
   {
     return;
   }
@@ -28,14 +28,19 @@ void IMUReader::gyro_isr()
     usleep(100);
   }
   interrupting = true;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-  if (!timeval_subtract(&delta, &end, &start) && IMUReader::current_reading < BUFFER_SIZE) {
+  if (IMUReader::current_reading < BUFFER_SIZE) {
     // printf("Herp\n");
     // uint8_t n_samples = imu->getFIFOSamples();
     // for(int i=0; i<n_samples; i++) {
       // printf("%i\n", n_samples);
       IMUReader::imu->readGyro();
-      IMUReader::delta_times[IMUReader::current_reading] = delta.tv_nsec / 1000;
+      uint32_t delta = tick - last_time;
+      last_time = tick;
+      // printf("delta: %d\n", delta);
+      // if(delta > 200 && current_reading > 1) {
+      //   return;
+      // }
+      IMUReader::delta_times[IMUReader::current_reading] = delta;
       IMUReader::gyro_readings[IMUReader::current_reading][0] = IMUReader::imu->calcGyro(IMUReader::imu->gx);
       IMUReader::gyro_readings[IMUReader::current_reading][1] = IMUReader::imu->calcGyro(IMUReader::imu->gy);
       IMUReader::gyro_readings[IMUReader::current_reading][2] = IMUReader::imu->calcGyro(IMUReader::imu->gz);
@@ -44,14 +49,17 @@ void IMUReader::gyro_isr()
   } else {
     printf("Derp\n");
   }
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   interrupting = false;
 }
 
 int main(int argc, char *argv[])
 {
 
-  wiringPiSetup();
+  int status = gpioInitialise();
+  if(status <= 0) {
+    printf("Pigpio init failed\n");
+    exit(EXIT_FAILURE);
+  }
 
   LSM9DS1 imu(IMU_MODE_I2C, 0x6b, 0x1e);
 
@@ -65,9 +73,7 @@ int main(int argc, char *argv[])
   printf("Calibrating\n");
   imu.calibrate();
 
-  if(!IMUReader::setupReader(&imu)){
-    exit(EXIT_FAILURE);
-  }
+  IMUReader::setupReader(&imu);
 
   // imu.configGyroInt(ZHIE_G, false, false);
   // imu.configGyroThs(5, Z_AXIS, 10, true);
