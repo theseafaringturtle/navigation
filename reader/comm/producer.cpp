@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,13 +8,24 @@
 
 #include "comm.h"
 
-int main(int argc, char* argv[])
-{
+void consumer_signal(int sigcode) {
+    if (sigcode == SIGUSR1) {
+        // recalibrating = true;
+    } else if (sigcode == SIGUSR2) {
+        // running = false;
+    }
+}
+
+int main(int argc, char* argv[]) {
+    // register CTRL+C handler
+    struct sigaction consumer_action;
+    consumer_action.sa_flags = 0;
+    consumer_action.sa_handler = consumer_signal;
+    sigemptyset(&consumer_action.sa_mask);
+    sigaction(SIGUSR1, &consumer_action, NULL);
+    sigaction(SIGUSR2, &consumer_action, NULL);
+
     // move to thread and use 2
-    // int sfd = connect_unix(SV_SOCK_PATH);
-    // if (!sfd) {
-    //     exit(EXIT_FAILURE);
-    // }
     struct sockaddr_un addr;
 
     int sfd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_NONBLOCK, 0);
@@ -35,9 +47,6 @@ int main(int argc, char* argv[])
     }
 
     char buf[MESSAGE_SIZE];
-
-    // const char* test = "herp derp";
-    // strcpy(bmessage()uf, test);
     compose_message(buf);
 
     while (true) {
@@ -52,8 +61,7 @@ int main(int argc, char* argv[])
     exit(EXIT_SUCCESS);
 }
 
-void compose_message(char* buf)
-{
+void compose_message(char* buf) {
     char header = 'G';
     *buf = header;
     double roll = 0;

@@ -16,10 +16,12 @@ struct LSM9DS1_Message {
 // Set up Unix datagram socket
 int setup_unix_socket(const char* path);
 
-// Connect to other Unix socket
+// Connect to Unix socket
 int connect_unix(const char* path);
 
 // todo move to main class
 // Compose a message of: one char to specify sensor, three doubles for the
 // dimension readings, one int for delta time
 void compose_message(char* buf);
+
+int write_restart_message();

@@ -1,4 +1,3 @@
-
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -35,7 +34,6 @@ int main(int argc, char* argv[]) {
         FD_ZERO(&input);
         FD_SET(sfd, &input);
         timeout.tv_sec = 10;
-        timeout.tv_usec = 0;
         int ret = select(sfd + 1, &input, NULL, NULL, &timeout);
         if (!ret) {
             printf("Timed out\n");
@@ -66,23 +64,27 @@ int main(int argc, char* argv[]) {
             if (numRead != MESSAGE_SIZE) {
                 perror("read failed");
                 printf("numRead: %i \n", numRead);
-                // create restart file
-                int fd = open(IMU_RESTART_PATH, O_WRONLY | O_CREAT, 0600);
-                if (!fd) {
-                    perror("restart");
-                    exit(EXIT_FAILURE);
+                if(!write_restart_message()) {
+                  exit(EXIT_FAILURE);
                 }
-                close(fd);
-                return 1;
             }
-            
+
             printf("Message from %c\n", message.sensor);
         }
-
 
         if (close(cfd) == -1) {
             perror("close");
         }
     }
     return 0;
+}
+
+int write_restart_message() {
+    int fd = open(IMU_RESTART_PATH, O_WRONLY | O_CREAT, 0600);
+    if (!fd) {
+        perror("restart");
+        return 0;
+    }
+    close(fd);
+    return 1;
 }
