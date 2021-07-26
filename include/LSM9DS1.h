@@ -290,7 +290,8 @@ public:
 
     // softReset() -- perform a software reset by writing 1 to SW_RESET in CTRL_REG8
     void softReset();
-                   
+    
+    void rebootXG();               
     // configMagInt() -- Configure Magnetometer Interrupt Generator
     // Input:
     //    - generator = Interrupt axis/high-low events
