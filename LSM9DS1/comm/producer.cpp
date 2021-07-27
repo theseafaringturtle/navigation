@@ -8,13 +8,11 @@
 
 #include "comm.h"
 
-using namespace LSM9DS1_SharedState;
-
 void consumer_signal(int sigcode) {
-    if (sigcode == SIGUSR1 || sigcode == SIGINT) {
-        recalibrating = true;
-    } else if (sigcode == SIGUSR2) {
-        imu_running = false;
+    if (sigcode == SIGUSR1) {
+        LSM9DS1_SharedState::recalibrating = true;
+    } else if (sigcode == SIGUSR2 || sigcode == SIGINT) {
+        LSM9DS1_SharedState::imu_running = false;
     }
 }
 
@@ -27,7 +25,7 @@ void producer_loop() {
     // Make sure socket's file descriptor is legit.
     if (sfd == -1) {
         perror("socket");
-        imu_running = false;
+        LSM9DS1_SharedState::imu_running = false;
         return;
     }
 
@@ -37,19 +35,19 @@ void producer_loop() {
 
     if (connect(sfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_un)) == -1) {
         perror("connect");
-        imu_running = false;
+        LSM9DS1_SharedState::imu_running = false;
         return;
     }
 
-    while (imu_running) {
-        for (size_t i = 0; i < m_queue.size(); i++) {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            LSM9DS1_Message message = m_queue.front();
+    while (LSM9DS1_SharedState::imu_running) {
+        for (size_t i = 0; i < LSM9DS1_SharedState::m_queue.size(); i++) {
+            std::lock_guard<std::mutex> lock(LSM9DS1_SharedState::m_mutex);
+            LSM9DS1_Message message = LSM9DS1_SharedState::m_queue.front();
             if (write(sfd, &message, MESSAGE_SIZE) != MESSAGE_SIZE) {
                 printf("Failed to write to socket\n");
                 exit(EXIT_FAILURE);
             }
-            m_queue.pop();
+            LSM9DS1_SharedState::m_queue.pop();
         }
         
         usleep(10e3);
