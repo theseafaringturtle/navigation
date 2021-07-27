@@ -12,12 +12,12 @@ int setup_unix_socket(const char *path);
 class LSM9DS1_SharedState
 {
 public:
-    static std::atomic<bool> imu_running;
-    static std::atomic<bool> recalibrating;
+    inline static std::atomic<bool> imu_running = true;
+    inline static std::atomic<bool> recalibrating = false;
 
-    static std::queue<LSM9DS1_Message> m_queue;
-    static std::mutex m_mutex;
-    static int times_recalibrated;
+    inline static std::queue<LSM9DS1_Message> m_queue;
+    inline static std::mutex m_mutex;
+    inline static int times_recalibrated = 0;
 }; // namespace LSM9DS1_SharedState
 
 void consumer_signal(int sigcode);

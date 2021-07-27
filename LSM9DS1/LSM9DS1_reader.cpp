@@ -17,7 +17,7 @@ class LSM9DS1SendCallback : public LSM9DS1callback {
         std::lock_guard<std::mutex> lock(LSM9DS1_SharedState::m_mutex);
         LSM9DS1_Message gyro_message = {'G', gx, gy, gz};
         LSM9DS1_SharedState::m_queue.push(gyro_message);
-        LSM9DS1_Message accel_message = {'G', ax, ay, az};
+        LSM9DS1_Message accel_message = {'A', ax, ay, az};
         LSM9DS1_SharedState::m_queue.push(accel_message);
     }
 };

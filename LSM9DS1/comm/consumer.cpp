@@ -116,9 +116,10 @@ int main(int argc, char* argv[]) {
                   exit(EXIT_FAILURE);
                 }
                 break;
+            } else {
+                printf("Message from %c: %f\n", message.sensor, message.reading_z);
             }
 
-            printf("Message from %c\n", message.sensor);
         }
 
         if (close(cfd) == -1) {
