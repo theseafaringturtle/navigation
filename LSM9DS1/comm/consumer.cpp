@@ -18,7 +18,6 @@ int main(int argc, char* argv[]) {
     }
 
     ssize_t numRead;
-    char buf[MESSAGE_SIZE];
     bool producer_running = true;
 
     fd_set input;

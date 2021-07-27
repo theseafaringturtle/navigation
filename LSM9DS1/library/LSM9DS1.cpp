@@ -5,14 +5,15 @@ Jim Lindblom @ SparkFun Electronics
 Original Creation Date: February 27, 2015
 https://github.com/sparkfun/LSM9DS1_Breakout
 
+2020, Bernd Porr, mail@berndporr.me.uk
+
 This file implements all functions of the LSM9DS1 class. Functions here range
 from higher level stuff, like reading/writing LSM9DS1 registers to low-level,
 hardware reads and writes. Both SPI and I2C handler functions can be found
 towards the bottom of this file.
 
 Development environment specifics:
-    IDE: Arduino 1.6
-    Hardware Platform: Arduino Uno
+    Hardware Platform: Raspberry PI
     LSM9DS1 Breakout Version: 1.0
 
 This code is beerware; if you see me (or any other SparkFun employee) at the
@@ -60,7 +61,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
     // 1 = 14.9    4 = 238
     // 2 = 59.5    5 = 476
     // 3 = 119     6 = 952
-    settings.gyro.sampleRate = 6;
+    settings.gyro.sampleRate = 4;
     // gyro cutoff frequency: value between 0-3
     // Actual value of cutoff frequency depends
     // on sample rate.
@@ -82,12 +83,12 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
     settings.accel.enableY = true;
     settings.accel.enableZ = true;
     // accel scale can be 2, 4, 8, or 16
-    settings.accel.scale = 2;
+    settings.accel.scale = 16;
     // accel sample rate can be 1-6
     // 1 = 10 Hz    4 = 238 Hz
     // 2 = 50 Hz    5 = 476 Hz
     // 3 = 119 Hz   6 = 952 Hz
-    settings.accel.sampleRate = 6;
+    settings.accel.sampleRate = 4;
     // Accel cutoff freqeuncy can be any value between -1 - 3.
     // -1 = bandwidth determined by sample rate
     // 0 = 408 Hz   2 = 105 Hz
@@ -156,7 +157,7 @@ uint16_t LSM9DS1::begin()
     uint16_t whoAmICombined = (xgTest << 8) | mTest;
 
     if (whoAmICombined != ((WHO_AM_I_AG_RSP << 8) | WHO_AM_I_M_RSP)) {
-        return 0;
+	    throw "WhoIAm returns wrong result.";
     }
 
     // Gyro initialization stuff:
@@ -168,8 +169,33 @@ uint16_t LSM9DS1::begin()
     // Magnetometer initialization stuff:
     initMag(); // "Turn on" all axes of the mag. Set up interrupts, etc.
 
-    // Once everything is initialized, return the WHO_AM_I registers we read:
+    calibrate();
+
+    // 20ms => 50Hz
+    start(10*1000*1000);
     return whoAmICombined;
+}
+
+
+void LSM9DS1::timerEvent() {
+	if (!lsm9ds1Callback) return;
+		readGyro();
+		readAccel();
+		readMag();
+		lsm9ds1Callback->hasSample(
+					   calcGyro(gx),
+					   calcGyro(gy),
+					   calcGyro(gz),
+					   calcAccel(ax),
+					   calcAccel(ay),
+					   calcAccel(az),
+					   calcMag(mx),
+					   calcMag(my),
+					   calcMag(mz));
+}
+
+void LSM9DS1::end() {
+	stop();
 }
 
 void LSM9DS1::initGyro()
@@ -792,41 +818,6 @@ void LSM9DS1::configInt(interrupt_select interrupt, uint8_t generator,
     xgWriteByte(CTRL_REG8, temp);
 }
 
-void LSM9DS1::configBDU(bool accelGyroBDU, bool magBDU)
-{
-    // Configure CTRL_REG8
-    uint8_t xg_temp;
-    xg_temp = xgReadByte(CTRL_REG8);
-
-    if (accelGyroBDU) xg_temp |= (1<<6);
-    else xg_temp &= ~(1<<6);
-    xgWriteByte(CTRL_REG8, xg_temp);
-
-    uint8_t mag_temp;
-    mag_temp = xgReadByte(CTRL_REG5_M);
-
-    if (magBDU) mag_temp |= (1<<6);
-    else mag_temp &= ~(1<<6);
-    xgWriteByte(CTRL_REG5_M, mag_temp);
-}
-
-void LSM9DS1::softReset() {
-    uint8_t temp;
-    temp = xgReadByte(CTRL_REG8);
-    temp |= 0x1;
-    xgWriteByte(CTRL_REG8, temp);
-}
-
-void LSM9DS1::rebootXG() {
-    // Get CTRL_REG8 contents
-    uint8_t xg_temp;
-    xg_temp = xgReadByte(CTRL_REG8);
-
-    // Set BOOT bit
-    xg_temp |= (1<<7);
-    xgWriteByte(CTRL_REG8, xg_temp);
-}
-
 void LSM9DS1::configInactivity(uint8_t duration, uint8_t threshold, bool sleepOn)
 {
     uint8_t temp = 0;
@@ -1149,3 +1140,5 @@ uint8_t LSM9DS1::I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * des
     }
     return count;
 }
+
+

@@ -42,7 +42,3 @@ int setup_unix_socket(const char* path) {
     }
     return sfd;
 }
-
-int connect_unix(const char* path) {
-    return 0;
-}

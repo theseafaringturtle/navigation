@@ -1,0 +1,5 @@
+/usr/local/lib/liblsm9ds1.so.1
+/usr/local/lib/liblsm9ds1.so
+/usr/local/include/LSM9DS1.h
+/usr/local/include/LSM9DS1_Registers.h
+/usr/local/include/LSM9DS1_Types.h
