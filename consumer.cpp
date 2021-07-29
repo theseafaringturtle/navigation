@@ -7,7 +7,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "comm_data.h"
+#include "LSM9DS1/comm/comm_data.h"
 
 #define IMU_RESTART_PATH "/home/pi/restart_imu"  // create a new file for i2c script to check if it needs to restart
 
@@ -15,7 +15,7 @@
 int setup_unix_socket(const char* path) {
     struct sockaddr_un addr;
     // SEQPACKET preserves both the data frame and the ordering
-    int sfd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_NONBLOCK, 0);  //
+    int sfd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_NONBLOCK, 0);
     printf("Server socket fd = %d\n", sfd);
 
     // Make sure socket's file descriptor is legit.
@@ -60,6 +60,7 @@ int write_restart_message() {
     return 1;
 }
 
+
 int main(int argc, char* argv[]) {
     int sfd = setup_unix_socket(SV_SOCK_PATH);
     if (!sfd) {
@@ -67,7 +68,9 @@ int main(int argc, char* argv[]) {
     }
 
     ssize_t numRead;
+    int current_reading = 0;
     bool producer_running = true;
+    bool calibrating = false;
 
     fd_set input;
     struct timeval timeout;
@@ -82,17 +85,28 @@ int main(int argc, char* argv[]) {
         FD_ZERO(&input);
         FD_SET(sfd, &input);
         timeout.tv_sec = 10;
-        int ret = select(sfd + 1, &input, NULL, NULL, &timeout);
+        
+        int cfd = accept4(sfd, NULL, NULL, SOCK_NONBLOCK);
+        if (cfd == -1 && errno != EAGAIN) {
+            perror("accept");
+            sleep(1);
+            continue;
+        }
+
+        FD_ZERO(&input);
+        FD_SET(cfd, &input);
+        timeout.tv_sec = 2;
+        timeout.tv_usec = 0;
+        int ret = select(cfd + 1, &input, NULL, NULL, &timeout);
         if (!ret) {
             printf("Timed out\n");
             continue;
         } else if (ret == -1) {
             perror("select");
+            sleep(1);
+            continue;
         }
-        int cfd = accept4(sfd, NULL, NULL, SOCK_NONBLOCK);
-        if (cfd == -1) {
-            perror("accept");
-        }
+
         printf("Accepted socket fd = %d\n", cfd);
 
         while (true) {
@@ -117,7 +131,16 @@ int main(int argc, char* argv[]) {
                 }
                 break;
             } else {
-                printf("Message from %c: %f\n", message.sensor, message.reading_z);
+                if(message.sensor == 'G') {
+                    if(current_reading < 5 && (message.reading_z > RECALIBRATION_THRESHOLD || -message.reading_z < RECALIBRATION_THRESHOLD)) {
+                        calibrating = true;
+                        //use another socket for sending? maybe useful for changing params on the go?
+                    }
+                    printf("Message from %c: %f\n", message.sensor, message.reading_z);
+                }
+                else if(message.sensor == 'A') {
+                    printf("Message from %c: %f\n", message.sensor, message.reading_x);
+                }
             }
 
         }
