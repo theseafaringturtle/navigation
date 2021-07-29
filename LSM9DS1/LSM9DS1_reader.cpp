@@ -5,25 +5,25 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "comm/comm.h"
 #include "library/LSM9DS1.h"
 #include "library/LSM9DS1_Types.h"
-#include "comm/comm.h"
-
 
 class LSM9DS1SendCallback : public LSM9DS1callback {
     virtual void hasSample(float gx, float gy, float gz,
-                           float ax, float ay, float az,
-                           float mx, float my, float mz) {
+        float ax, float ay, float az,
+        float mx, float my, float mz)
+    {
         std::lock_guard<std::mutex> lock(LSM9DS1_SharedState::m_mutex);
-        LSM9DS1_Message gyro_message = {'G', gx, gy, gz};
+        LSM9DS1_Message gyro_message = { 'G', gx, gy, gz };
         LSM9DS1_SharedState::m_queue.push(gyro_message);
-        LSM9DS1_Message accel_message = {'A', ax, ay, az};
+        LSM9DS1_Message accel_message = { 'A', ax, ay, az };
         LSM9DS1_SharedState::m_queue.push(accel_message);
     }
 };
 
-
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
     // Register signal handler so any process can ask for recalibration or shutdown
     struct sigaction consumer_action;
     consumer_action.sa_flags = 0;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     imu.setCallback(&imu_callback);
     try {
         imu.begin();
-    } catch(const char* errorMessage) {
+    } catch (const char* errorMessage) {
         printf("%s\n", errorMessage);
         LSM9DS1_SharedState::imu_running = false;
     }
@@ -67,4 +67,3 @@ int main(int argc, char *argv[]) {
 
     exit(EXIT_SUCCESS);
 }
-

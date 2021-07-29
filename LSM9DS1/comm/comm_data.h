@@ -1,5 +1,4 @@
-struct LSM9DS1_Message
-{
+struct LSM9DS1_Message {
     char sensor;
     double reading_x;
     double reading_y;

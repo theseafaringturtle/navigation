@@ -6,8 +6,7 @@
 #include "comm_data.h"
 
 // Got to keep them global since they're used in a signal handler
-class LSM9DS1_SharedState
-{
+class LSM9DS1_SharedState {
 public:
     inline static std::atomic<bool> imu_running = true;
     inline static std::atomic<bool> recalibrating = false;

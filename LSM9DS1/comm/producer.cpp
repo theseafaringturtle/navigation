@@ -8,7 +8,8 @@
 
 #include "comm.h"
 
-void consumer_signal(int sigcode) {
+void consumer_signal(int sigcode)
+{
     if (sigcode == SIGUSR1) {
         LSM9DS1_SharedState::recalibrating = true;
     } else if (sigcode == SIGUSR2 || sigcode == SIGINT) {
@@ -16,7 +17,8 @@ void consumer_signal(int sigcode) {
     }
 }
 
-void producer_loop() {
+void producer_loop()
+{
     struct sockaddr_un addr;
 
     int sfd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_NONBLOCK, 0);
@@ -49,7 +51,7 @@ void producer_loop() {
             }
             LSM9DS1_SharedState::m_queue.pop();
         }
-        
+
         usleep(10e3);
     }
 }

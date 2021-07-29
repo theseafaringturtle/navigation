@@ -10,11 +10,11 @@
 #include "LSM9DS1/comm/comm_data.h"
 #include "LSM9DS1/comm/socket_setup.hpp"
 
-#define IMU_RESTART_PATH "/home/pi/restart_imu"  // create a new file for i2c script to check if it needs to restart
+#define IMU_RESTART_PATH "/home/pi/restart_imu" // create a new file for i2c script to check if it needs to restart
 #define RECALIBRATION_THRESHOLD 0.6
 
-
-int write_restart_message() {
+int write_restart_message()
+{
     int fd = open(IMU_RESTART_PATH, O_WRONLY | O_CREAT, 0600);
     if (!fd) {
         perror("restart");
@@ -24,8 +24,8 @@ int write_restart_message() {
     return 1;
 }
 
-
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     int sfd = setup_unix_socket(SV_SOCK_PATH);
     if (!sfd) {
         exit(EXIT_FAILURE);
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
         // sfd remains open and can be used to accept further connections. */
         printf("Waiting to accept a connection...\n");
         int cfd = wait_accept_socket(sfd);
-        if(!cfd) {
+        if (!cfd) {
             sleep(1);
             continue;
         }
@@ -68,25 +68,23 @@ int main(int argc, char* argv[]) {
             if (numRead != MESSAGE_SIZE) {
                 perror("read failed");
                 printf("numRead: %i \n", numRead);
-                if(!write_restart_message()) {
-                  exit(EXIT_FAILURE);
+                if (!write_restart_message()) {
+                    exit(EXIT_FAILURE);
                 }
                 break;
             } else {
-                if(message.sensor == 'G') {
-                    if(current_reading < 5 && (message.reading_z > RECALIBRATION_THRESHOLD || -message.reading_z < RECALIBRATION_THRESHOLD)) {
+                if (message.sensor == 'G') {
+                    if (current_reading < 5 && (message.reading_z > RECALIBRATION_THRESHOLD || -message.reading_z < RECALIBRATION_THRESHOLD)) {
                         calibrating = true;
                         //use another socket for sending? maybe useful for changing params on the go?
                     }
                     current_reading++;
                     printf("Message from %c: %f\n", message.sensor, message.reading_z);
-                }
-                else if(message.sensor == 'A') {
+                } else if (message.sensor == 'A') {
                     printf("Message from %c: %f\n", message.sensor, message.reading_x);
                     current_reading++;
                 }
             }
-
         }
 
         if (close(cfd) == -1) {
