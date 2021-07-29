@@ -1130,9 +1130,7 @@ uint8_t LSM9DS1::I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * des
     wiringPiI2CWrite(_fd, subAddress);
     uint8_t temp_dest[count];
     if ((read(_fd, temp_dest, 6)) < 0) {
-        //fprintf(stderr, "Error: read value\n");
-        throw 999;
-        return 0;
+        throw "Error reading from I2C";
     }
     close(_fd);
     for (int i = 0; i < count; i++) {

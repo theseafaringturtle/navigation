@@ -6,5 +6,5 @@ clean:
 	rm consumer
 
 consumer: 
-	$(CPP) -g -DDEBUG -Wall -O2 consumer.cpp LSM9DS1/comm/comm_data.h -o consumer -std=c++17
+	$(CPP) -g -DDEBUG -Wall -O2 consumer.cpp LSM9DS1/comm/socket_setup.hpp LSM9DS1/comm/comm_data.h -o consumer -std=c++17
 

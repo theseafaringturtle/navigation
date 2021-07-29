@@ -40,7 +40,12 @@ int main(int argc, char *argv[]) {
     // imu.configBDU(true, false);
     LSM9DS1SendCallback imu_callback;
     imu.setCallback(&imu_callback);
-    imu.begin();
+    try {
+        imu.begin();
+    } catch(const char* errorMessage) {
+        printf("%s\n", errorMessage);
+        LSM9DS1_SharedState::imu_running = false;
+    }
 
     while (LSM9DS1_SharedState::imu_running) {
         if (LSM9DS1_SharedState::recalibrating) {

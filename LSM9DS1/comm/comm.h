@@ -5,9 +5,6 @@
 
 #include "comm_data.h"
 
-// Set up Unix datagram socket
-int setup_unix_socket(const char *path);
-
 // Got to keep them global since they're used in a signal handler
 class LSM9DS1_SharedState
 {
@@ -23,5 +20,3 @@ public:
 void consumer_signal(int sigcode);
 
 void producer_loop();
-
-#define RECALIBRATION_THRESHOLD 0.6
