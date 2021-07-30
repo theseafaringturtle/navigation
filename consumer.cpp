@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "LSM9DS1/comm/comm_data.h"
 #include "LSM9DS1/comm/socket_setup.hpp"
@@ -24,6 +25,31 @@ int write_restart_message()
     return 1;
 }
 
+pid_t read_producer_PID(int cfd)
+{
+    fd_set input;
+    struct timeval timeout;
+    FD_ZERO(&input);
+    FD_SET(cfd, &input);
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100e3;
+    int ret = select(cfd + 1, &input, NULL, NULL, &timeout);
+    if (!ret) {
+        printf("Timed out\n");
+        return 0;
+    } else if (ret == -1) {
+        perror("Select");
+        return 0;
+    }
+    int PID;
+    pid_t numRead = read(cfd, &PID, sizeof(pid_t));
+    if(numRead != sizeof(pid_t)) {
+        perror("Read failed");
+        return 0;
+    }
+    return PID;
+}
+
 int main(int argc, char* argv[])
 {
     int sfd = setup_unix_socket(SV_SOCK_PATH);
@@ -39,6 +65,7 @@ int main(int argc, char* argv[])
     fd_set input;
     struct timeval timeout;
 
+    int producer_pid;
     LSM9DS1_Message message;
 
     while (producer_running) {
@@ -50,12 +77,17 @@ int main(int argc, char* argv[])
             continue;
         }
         printf("Accepted socket fd = %d\n", cfd);
+        producer_pid = read_producer_PID(cfd);
+        if(!producer_pid) {
+            close(cfd);
+            continue;
+        }
 
         while (true) {
             FD_ZERO(&input);
             FD_SET(cfd, &input);
-            timeout.tv_sec = 1;
-            timeout.tv_usec = 0;
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 100e3;
             int ret = select(cfd + 1, &input, NULL, NULL, &timeout);
             if (!ret) {
                 printf("Timed out\n");
@@ -76,7 +108,7 @@ int main(int argc, char* argv[])
                 if (message.sensor == 'G') {
                     if (current_reading < 5 && (message.reading_z > RECALIBRATION_THRESHOLD || -message.reading_z < RECALIBRATION_THRESHOLD)) {
                         calibrating = true;
-                        //use another socket for sending? maybe useful for changing params on the go?
+                        // kill(producer_pid, SIGUSR1);
                     }
                     current_reading++;
                     printf("Message from %c: %f\n", message.sensor, message.reading_z);

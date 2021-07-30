@@ -12,7 +12,7 @@ void consumer_signal(int sigcode)
 {
     if (sigcode == SIGUSR1) {
         LSM9DS1_SharedState::recalibrating = true;
-    } else if (sigcode == SIGUSR2 || sigcode == SIGINT) {
+    } else if (sigcode == SIGUSR2 || sigcode == SIGINT) { // todo reuse SIGUSR2?
         LSM9DS1_SharedState::imu_running = false;
     }
 }
@@ -40,6 +40,13 @@ void producer_loop()
         LSM9DS1_SharedState::imu_running = false;
         return;
     }
+    // write PID so we can receive signals
+    pid_t pid = getpid();
+    if (write(sfd, &pid, sizeof(pid_t)) != sizeof(pid_t)) {
+        printf("Failed to write PID to socket\n");
+        close(sfd);
+        exit(EXIT_FAILURE);
+    }
 
     while (LSM9DS1_SharedState::imu_running) {
         for (size_t i = 0; i < LSM9DS1_SharedState::m_queue.size(); i++) {
@@ -47,6 +54,7 @@ void producer_loop()
             LSM9DS1_Message message = LSM9DS1_SharedState::m_queue.front();
             if (write(sfd, &message, MESSAGE_SIZE) != MESSAGE_SIZE) {
                 printf("Failed to write to socket\n");
+                close(sfd);
                 exit(EXIT_FAILURE);
             }
             LSM9DS1_SharedState::m_queue.pop();

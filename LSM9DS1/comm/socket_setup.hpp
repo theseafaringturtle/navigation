@@ -47,29 +47,20 @@ int setup_unix_socket(const char* path)
 int wait_accept_socket(int sfd)
 {
     fd_set input;
-    struct timeval timeout;
     // NOTE: blocks until a connection request arrives.
     FD_ZERO(&input);
     FD_SET(sfd, &input);
-    timeout.tv_sec = 10;
 
     int cfd = accept4(sfd, NULL, NULL, SOCK_NONBLOCK);
-    if (cfd == -1 && errno != EAGAIN) { // EAGAIN = will return later since it's async
-        perror("accept");
+    if(cfd == -1) {
+        if (errno == EWOULDBLOCK) {
+        // printf("No pending connections; sleeping for one second.\n");
         return 0;
+      } else {
+        perror("error when accepting connection");
+        return 0;
+      }
+    } else {
+        return cfd;
     }
-
-    FD_ZERO(&input);
-    FD_SET(cfd, &input);
-    timeout.tv_sec = 2;
-    timeout.tv_usec = 0;
-    int ret = select(cfd + 1, &input, NULL, NULL, &timeout);
-    if (!ret) {
-        printf("Timed out\n");
-        return 0;
-    } else if (ret == -1) {
-        perror("select");
-        return 0;
-    }
-    return cfd;
 }
