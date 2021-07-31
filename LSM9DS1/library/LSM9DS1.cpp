@@ -943,6 +943,24 @@ uint8_t LSM9DS1::getMagIntSrc()
     return 0;
 }
 
+void LSM9DS1::configBDU(bool accelGyroBDU, bool magBDU)
+{
+    // Configure CTRL_REG8
+    uint8_t xg_temp;
+    xg_temp = xgReadByte(CTRL_REG8);
+
+    if (accelGyroBDU) xg_temp |= (1<<6);
+    else xg_temp &= ~(1<<6);
+    xgWriteByte(CTRL_REG8, xg_temp);
+
+    uint8_t mag_temp;
+    mag_temp = xgReadByte(CTRL_REG5_M);
+
+    if (magBDU) mag_temp |= (1<<6);
+    else mag_temp &= ~(1<<6);
+    xgWriteByte(CTRL_REG5_M, mag_temp);
+}
+
 void LSM9DS1::sleepGyro(bool enable)
 {
     uint8_t temp = xgReadByte(CTRL_REG9);

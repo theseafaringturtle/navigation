@@ -326,6 +326,9 @@ public:
     
 	// getGyroIntSrc() -- Get contents of magnetometer interrupt source register
 	uint8_t getMagIntSrc();
+
+	// Enable/disable Block Data Update for accel&gyro, magnetometer
+	void configBDU(bool accelGyroBDU, bool magBDU);
     
 	// getGyroIntSrc() -- Get status of inactivity interrupt
 	uint8_t getInactivity();
