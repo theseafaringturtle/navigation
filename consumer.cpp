@@ -1,18 +1,22 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <signal.h>
+#include <thread>
 
 #include "LSM9DS1/comm/comm_data.h"
 #include "LSM9DS1/comm/socket_setup.hpp"
 
+#include "consumer.hpp"
+
 #define IMU_RESTART_PATH "/home/pi/restart_imu" // create a new file for i2c script to check if it needs to restart
 #define RECALIBRATION_THRESHOLD 0.6
+
 
 int write_restart_message()
 {
@@ -43,7 +47,7 @@ pid_t read_producer_PID(int cfd)
     }
     int PID;
     pid_t numRead = read(cfd, &PID, sizeof(pid_t));
-    if(numRead != sizeof(pid_t)) {
+    if (numRead != sizeof(pid_t)) {
         perror("Read failed");
         return 0;
     }
@@ -57,9 +61,10 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
+    std::thread encoder_thread(encoder_loop);
+
     ssize_t numRead;
     int current_reading = 0;
-    bool producer_running = true;
     bool calibrating = false;
 
     fd_set input;
@@ -68,7 +73,7 @@ int main(int argc, char* argv[])
     int producer_pid;
     LSM9DS1_Message message;
 
-    while (producer_running) {
+    while (reading_imu) {
         // sfd remains open and can be used to accept further connections. */
         printf("Waiting to accept a connection...\n");
         int cfd = wait_accept_socket(sfd);
@@ -78,7 +83,7 @@ int main(int argc, char* argv[])
         }
         printf("Accepted socket fd = %d\n", cfd);
         producer_pid = read_producer_PID(cfd);
-        if(!producer_pid) {
+        if (!producer_pid) {
             close(cfd);
             continue;
         }
@@ -116,6 +121,7 @@ int main(int argc, char* argv[])
                     printf("Message from %c: %f\n", message.sensor, message.reading_x);
                     current_reading++;
                 }
+                printf("Current encoder position: %i\n", encoder_position.load());
             }
         }
 
@@ -123,5 +129,7 @@ int main(int argc, char* argv[])
             perror("close");
         }
     }
+    reading_encoder = false;
+    encoder_thread.join();
     return 0;
 }
