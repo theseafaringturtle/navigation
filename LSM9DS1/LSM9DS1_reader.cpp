@@ -5,7 +5,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "comm/comm.h"
+#include "comm/comm.hpp"
 #include "library/LSM9DS1.h"
 #include "library/LSM9DS1_Types.h"
 
@@ -14,11 +14,11 @@ class LSM9DS1SendCallback : public LSM9DS1callback {
         float ax, float ay, float az,
         float mx, float my, float mz)
     {
-        std::lock_guard<std::mutex> lock(LSM9DS1_SharedState::m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         LSM9DS1_Message gyro_message = { 'G', gx, gy, gz };
-        LSM9DS1_SharedState::m_queue.push(gyro_message);
+        m_queue.push(gyro_message);
         LSM9DS1_Message accel_message = { 'A', ax, ay, az };
-        LSM9DS1_SharedState::m_queue.push(accel_message);
+        m_queue.push(accel_message);
     }
 };
 
@@ -44,20 +44,20 @@ int main(int argc, char* argv[])
         imu.begin();
     } catch (const char* errorMessage) {
         printf("%s\n", errorMessage);
-        LSM9DS1_SharedState::imu_running = false;
+        imu_running = false;
     }
 
-    while (LSM9DS1_SharedState::imu_running) {
-        if (LSM9DS1_SharedState::recalibrating) {
-            if (LSM9DS1_SharedState::times_recalibrated == 5) {
+    while (imu_running) {
+        if (recalibrating) {
+            if (times_recalibrated == 5) {
                 printf("Tried recalibrating, the i2c lines are too noisy\n");
                 exit(EXIT_FAILURE);
             }
             printf("Recalibrating\n");
             usleep(20e3);
             imu.calibrate();
-            LSM9DS1_SharedState::times_recalibrated++;
-            LSM9DS1_SharedState::recalibrating = false;
+            times_recalibrated++;
+            recalibrating = false;
         }
     }
     usleep(500);

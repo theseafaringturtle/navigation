@@ -1,19 +1,29 @@
+
+#include <atomic>
+#include <mutex>
+#include <queue>
+#include <thread>
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <stdio.h>
 
-#include "comm.h"
+#include "comm_data.h"
+
+std::atomic<bool> imu_running(true);
+std::atomic<bool> recalibrating(false);
+
+std::queue<LSM9DS1_Message> m_queue;
+std::mutex m_mutex;
+std::atomic<int> times_recalibrated (0);
 
 void consumer_signal(int sigcode)
 {
     if (sigcode == SIGUSR1) {
-        LSM9DS1_SharedState::recalibrating = true;
+        recalibrating = true;
     } else if (sigcode == SIGUSR2 || sigcode == SIGINT) { // todo reuse SIGUSR2?
-        LSM9DS1_SharedState::imu_running = false;
+        imu_running = false;
     }
 }
 
@@ -27,7 +37,7 @@ void producer_loop()
     // Make sure socket's file descriptor is legit.
     if (sfd == -1) {
         perror("socket");
-        LSM9DS1_SharedState::imu_running = false;
+        imu_running = false;
         return;
     }
 
@@ -37,7 +47,7 @@ void producer_loop()
 
     if (connect(sfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_un)) == -1) {
         perror("connect");
-        LSM9DS1_SharedState::imu_running = false;
+        imu_running = false;
         return;
     }
     // write PID so we can receive signals
@@ -48,16 +58,16 @@ void producer_loop()
         exit(EXIT_FAILURE);
     }
 
-    while (LSM9DS1_SharedState::imu_running) {
-        for (size_t i = 0; i < LSM9DS1_SharedState::m_queue.size(); i++) {
-            std::lock_guard<std::mutex> lock(LSM9DS1_SharedState::m_mutex);
-            LSM9DS1_Message message = LSM9DS1_SharedState::m_queue.front();
+    while (imu_running) {
+        for (size_t i = 0; i < m_queue.size(); i++) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            LSM9DS1_Message message = m_queue.front();
             if (write(sfd, &message, MESSAGE_SIZE) != MESSAGE_SIZE) {
                 printf("Failed to write to socket\n");
                 close(sfd);
                 exit(EXIT_FAILURE);
             }
-            LSM9DS1_SharedState::m_queue.pop();
+            m_queue.pop();
         }
 
         usleep(10e3);

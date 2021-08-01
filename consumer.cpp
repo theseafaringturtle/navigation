@@ -56,6 +56,7 @@ pid_t read_producer_PID(int cfd)
 
 int main(int argc, char* argv[])
 {
+    std::atomic<bool> reading_imu (true);
     int sfd = setup_unix_socket(SV_SOCK_PATH);
     if (!sfd) {
         exit(EXIT_FAILURE);

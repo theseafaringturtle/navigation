@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-std::atomic<bool> reading_imu (true);
 std::atomic<bool> reading_encoder (true);
 std::atomic<int> encoder_position (0);
 
