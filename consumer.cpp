@@ -12,7 +12,7 @@
 #include "LSM9DS1/comm/comm_data.h"
 #include "LSM9DS1/comm/socket_setup.hpp"
 
-#include "consumer.hpp"
+#include "Encoder/encoder.hpp"
 
 #define IMU_RESTART_PATH "/home/pi/restart_imu" // create a new file for i2c script to check if it needs to restart
 #define RECALIBRATION_THRESHOLD 0.6
@@ -56,7 +56,6 @@ pid_t read_producer_PID(int cfd)
 
 int main(int argc, char* argv[])
 {
-    std::atomic<bool> reading_imu (true);
     int sfd = setup_unix_socket(SV_SOCK_PATH);
     if (!sfd) {
         exit(EXIT_FAILURE);
@@ -74,7 +73,7 @@ int main(int argc, char* argv[])
     int producer_pid;
     LSM9DS1_Message message;
 
-    while (reading_imu) {
+    while (true) {
         // sfd remains open and can be used to accept further connections. */
         printf("Waiting to accept a connection...\n");
         int cfd = wait_accept_socket(sfd);

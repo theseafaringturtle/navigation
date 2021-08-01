@@ -1,14 +1,13 @@
 
 #include <atomic>
-#include <mutex>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <mutex>
 #include <stdio.h>
 #include <unistd.h>
 
-std::atomic<bool> reading_encoder (true);
-std::atomic<int> encoder_position (0);
-
+std::atomic<bool> reading_encoder(true);
+std::atomic<int> encoder_position(0);
 
 void encoder_loop(void)
 {
@@ -24,7 +23,7 @@ void encoder_loop(void)
     fd_set input;
     struct timeval timeout;
 
-    while (reading_imu) {
+    while (reading_encoder) {
         FD_ZERO(&input);
         FD_SET(ifd, &input);
         timeout.tv_sec = 5;
@@ -40,7 +39,7 @@ void encoder_loop(void)
         ird = read(ifd, &ievt, ievt_size);
         if (ievt.type == EV_REL && ird == ievt_size) {
             // printf("%i\n", ievt.value);
-            encoder_position = (encoder_position + ievt.value ) % 600;
+            encoder_position = (encoder_position + ievt.value) % 600;
         }
     }
 }
