@@ -5,6 +5,6 @@ struct LSM9DS1_Message {
     double reading_z;
 };
 
-#define MESSAGE_SIZE sizeof(LSM9DS1_Message)
+#define MESSAGE_SIZE 64 //sizeof(LSM9DS1_Message) 
 
 #define SV_SOCK_PATH "/home/pi/uds"
