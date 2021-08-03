@@ -9,6 +9,7 @@
 
 #define MESSAGE_SIZE 64 //sizeof(LSM9DS1_Message) 
 
+// Set up listening socket
 int setup_unix_socket(const char* path) {
     struct sockaddr_un addr;
     // SEQPACKET preserves both the data frame and the ordering
@@ -46,6 +47,7 @@ int setup_unix_socket(const char* path) {
     return sfd;
 }
 
+// Keep waiting for pending connections, return a descriptor when one is established 
 int wait_accept_socket(int sfd) {
     fd_set input;
     // NOTE: blocks until a connection request arrives.
@@ -89,6 +91,7 @@ pid_t read_producer_PID(int cfd) {
     return PID;
 }
 
+// Keep waiting for connections then reading messages in a loop using wait_accept_socket 
 int read_unix_socket(int sfd, std::function<void (char*)> read_func, std::function<int (void)> read_failed_func) {
 
     ssize_t numRead;
