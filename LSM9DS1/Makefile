@@ -1,9 +1,9 @@
 CPP = g++
 .PHONY: all
-all: LSM9DS1_Reader
+all: LSM9DS1_Sensor
 
-LSM9DS1_Reader: LSM9DS1_reader.cpp
-	$(CPP) -J4 -g -DDEBUG -Wall -O2 -Wl,-rpath=./library -L./library LSM9DS1_reader.cpp comm/comm.hpp comm/comm_data.h -o LSM9DS1_client -llsm9ds1 -lrt -lpthread -std=c++17
+LSM9DS1_Sensor: main.cpp
+	$(CPP) -J4 -g -DDEBUG -Wall -O2 -Wl,-rpath=./library -L./library LSM9DS1_sensor.cpp  LSM9DS1_sensor.h  LSM9DS1_utils.h LSM9DS1_utils.cpp sensor.hpp comm/comm_data.h -o LSM9DS1_client -llsm9ds1 -lrt -lpthread -std=c++17
 
 clean:
-	rm -f LSM9DS1_Reader
+	rm -f LSM9DS1_Sensor
