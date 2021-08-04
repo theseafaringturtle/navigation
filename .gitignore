@@ -1,5 +1,6 @@
 .vscode/
 LSM9DS1/LSM9DS1_client
+consumer
 
 # Created by https://www.gitignore.io/api/osx,linux,windows
 
