@@ -1,28 +1,24 @@
 #include "LSM9DS1_sensor.h"
 #include "library/LSM9DS1.h"
+#include "LSM9DS1_utils.h"
 
-class LSM9DS1SendCallback : public LSM9DS1callback {
-   public:
-    LSM9DS1_Sensor* m_sensor;
+void LSM9DS1SendCallback::set_sensor(LSM9DS1_Sensor *sensor)
+{
+    this->m_sensor = sensor;
+}
 
-    LSM9DS1SendCallback(LSM9DS1_Sensor* sensor) {
-        m_sensor = sensor;
-    }
+void LSM9DS1SendCallback::hasSample(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+{
+    this->m_sensor->has_sample(gx, gy, gz, ax, ay, az, mx, my, mz);
+}
 
-    void hasSample(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
-        m_sensor->has_sample(gx, gy, gz, ax, ay, az, mx, my, mz);
-    }
-};
 
-class LSM9DS1_SignalDIspatcher {
-   private:
-    static LSM9DS1_Sensor* _sensor;
-
-   public:
-    LSM9DS1_SignalDIspatcher(LSM9DS1_Sensor* sensor) {
-        _sensor = sensor;
-    }
-    static void consumer_signal(int sigcode) {
-        _sensor->consumer_signal(sigcode);
-    }
-};
+LSM9DS1_Sensor* LSM9DS1_SignalDIspatcher::_sensor;
+void LSM9DS1_SignalDIspatcher::set_sensor(LSM9DS1_Sensor *sensor)
+{
+    LSM9DS1_SignalDIspatcher::_sensor = sensor;
+}
+void LSM9DS1_SignalDIspatcher::consumer_signal(int sigcode)
+{
+    LSM9DS1_SignalDIspatcher::_sensor->consumer_signal(sigcode);
+}

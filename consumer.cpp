@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     if (!sfd) {
         exit(EXIT_FAILURE);
     }
-    read_unix_socket(sfd, read_LSM9DS1_data, write_restart_message);
+    read_unix_socket(sfd, read_LSM9DS1_data, write_restart_message, LSM9DS1_MESSAGE_SIZE);
 
     reading_encoder = false;
     encoder_thread.join();

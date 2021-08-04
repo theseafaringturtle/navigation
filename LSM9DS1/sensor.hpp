@@ -15,9 +15,10 @@
 class Sensor {
    public:
     std::atomic<bool> running;
-    virtual void producer_socket_loop(int sfd);
+    virtual void producer_socket_loop(int sfd) = 0;
+    virtual void run() = 0;
 
-    virtual void start_producer_socket(const char* path) {
+    void start_producer_socket(const char* path) {
         struct sockaddr_un addr;
 
         int sfd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_NONBLOCK, 0);

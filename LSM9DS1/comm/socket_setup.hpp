@@ -7,8 +7,6 @@
 #include <unistd.h>
 #include <functional>
 
-#define MESSAGE_SIZE 64 //sizeof(LSM9DS1_Message) 
-
 // Set up listening socket
 int setup_unix_socket(const char* path) {
     struct sockaddr_un addr;
@@ -92,13 +90,13 @@ pid_t read_producer_PID(int cfd) {
 }
 
 // Keep waiting for connections then reading messages in a loop using wait_accept_socket 
-int read_unix_socket(int sfd, std::function<void (char*)> read_func, std::function<int (void)> read_failed_func) {
+int read_unix_socket(int sfd, std::function<void (char*)> read_func, std::function<int (void)> read_failed_func, size_t msgSize) {
 
     ssize_t numRead;
     fd_set input;
     struct timeval timeout;
 
-    char message_buf[MESSAGE_SIZE];
+    char message_buf[msgSize];
     int producer_pid;
 
     while (true) {
@@ -129,8 +127,8 @@ int read_unix_socket(int sfd, std::function<void (char*)> read_func, std::functi
                 perror("Select");
                 return 1;
             }
-            numRead = read(cfd, &message_buf, MESSAGE_SIZE);
-            if (numRead != MESSAGE_SIZE) {
+            numRead = read(cfd, &message_buf, msgSize);
+            if (numRead != msgSize) {
                 perror("read failed");
                 printf("numRead: %ld \n", numRead);
                 if (!read_failed_func()) {
