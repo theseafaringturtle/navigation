@@ -1,7 +1,7 @@
 CPP = g++
 .PHONY: all
 all: consumer
-CPP_FILES=consumer.cpp Encoder/encoder.hpp comm/socket_setup.hpp comm/comm_data.h
+CPP_FILES=consumer.cpp Encoder/encoder.hpp comm/socket_setup.hpp comm/imu_comm_data.h comm/encoders_comm_data.h
 
 clean: 
 	rm consumer
