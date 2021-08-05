@@ -11,8 +11,8 @@
 #include <thread>
 
 #include "Encoder/encoder.hpp"
-#include "LSM9DS1/comm/comm_data.h"
-#include "LSM9DS1/comm/socket_setup.hpp"
+#include "comm/imu_comm_data.h"
+#include "comm/socket_setup.hpp"
 
 #define IMU_RESTART_PATH "/home/pi/restart_imu"  // create a new file for i2c script to check if it needs to restart
 #define RECALIBRATION_THRESHOLD 0.6
@@ -32,28 +32,24 @@ int write_restart_message(void) {
 
 void read_LSM9DS1_data(void* message_buf) {
     LSM9DS1_Message* message = static_cast<LSM9DS1_Message*>(message_buf);
-    if (message->sensor == 'G') {
-        if (current_reading < 5 && (message->reading_z > RECALIBRATION_THRESHOLD || -message->reading_z < RECALIBRATION_THRESHOLD)) {
-            calibrating = true;
-            // kill(producer_pid, SIGUSR1);
-        }
-        current_reading++;
-        printf("Message from %c: %f\n", message->sensor, message->reading_z);
-    } else if (message->sensor == 'A') {
-        printf("Message from %c: %f\n", message->sensor, message->reading_x);
-        current_reading++;
+    if (current_reading < 5 && (message->gyro_z > RECALIBRATION_THRESHOLD || -message->gyro_z < RECALIBRATION_THRESHOLD)) {
+        calibrating = true;
+        // kill(producer_pid, SIGUSR1);
     }
-    printf("Current encoder position: %i\n", encoder_position.load());
+    current_reading++;
+    printf("Message from %c: %f\n", message->sensor, message->acc_x);
 }
 
 int main(int argc, char* argv[]) {
     std::thread encoder_thread(encoder_loop);
 
-    int sfd = setup_unix_socket(SV_SOCK_PATH);
+    int sfd = setup_unix_socket(IMU_SOCK_PATH);
     if (!sfd) {
         exit(EXIT_FAILURE);
     }
+    // std::thread imu_reader_thread (&read_unix_socket, sfd, read_LSM9DS1_data, write_restart_message, LSM9DS1_MESSAGE_SIZE);
     read_unix_socket(sfd, read_LSM9DS1_data, write_restart_message, LSM9DS1_MESSAGE_SIZE);
+    // imu_reader_thread.join();
 
     reading_encoder = false;
     encoder_thread.join();

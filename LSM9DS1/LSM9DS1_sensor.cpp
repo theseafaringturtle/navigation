@@ -58,17 +58,18 @@ void LSM9DS1_Sensor::consumer_signal(int sigcode)
 
 void LSM9DS1_Sensor::has_sample(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 {
+    timespec ts;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+    unsigned long timestamp_us = ts.tv_sec * 1e6 + ts.tv_nsec / 1e3;
     std::lock_guard<std::mutex> lock(m_mutex);
-    LSM9DS1_Message gyro_message = {'G', gx, gy, gz};
+    LSM9DS1_Message gyro_message = {'L', timestamp_us, ax, gz};
     m_queue.push(gyro_message);
-    LSM9DS1_Message accel_message = {'A', ax, ay, az};
-    m_queue.push(accel_message);
 }
 
 void LSM9DS1_Sensor::run()
 {
     // Start socket thread
-    std::thread producer_UDS_thread(&Sensor::start_producer_socket, (Sensor*)this, SV_SOCK_PATH);
+    std::thread producer_UDS_thread(&Sensor::start_producer_socket, (Sensor*)this, IMU_SOCK_PATH);
 
     // Start IMU callback
     LSM9DS1 imu(IMU_MODE_I2C, 0x6b, 0x1e);

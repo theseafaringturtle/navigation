@@ -1,6 +1,6 @@
 #include <functional>
 #include <atomic>
-#include "comm/comm_data.h"
+#include "../comm/imu_comm_data.h"
 #include "sensor.hpp"
 
 class LSM9DS1_Sensor : Sensor {
