@@ -1,7 +1,7 @@
 CPP = g++
 .PHONY: all
 all: LSM9DS1_Sensor
-CPP_FILES = main.cpp LSM9DS1_sensor.cpp LSM9DS1_sensor.h LSM9DS1_utils.h LSM9DS1_utils.cpp sensor.hpp ../comm/imu_comm_data.h
+CPP_FILES = main.cpp LSM9DS1_sensor.cpp LSM9DS1_sensor.h LSM9DS1_utils.h LSM9DS1_utils.cpp ../comm/sensor.hpp ../comm/imu_comm_data.h
 
 LSM9DS1_Sensor:
 	$(CPP) -J4 -g -DDEBUG $(CPP_FILES) -Wall -O2 -Wl,-rpath=./library -L./library  -o LSM9DS1_client -llsm9ds1 -lrt -lpthread -std=c++17

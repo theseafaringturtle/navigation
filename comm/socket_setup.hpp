@@ -74,7 +74,7 @@ pid_t read_producer_PID(int cfd) {
     timeout.tv_usec = 100e3;
     int ret = select(cfd + 1, &input, NULL, NULL, &timeout);
     if (!ret) {
-        printf("Timed out\n");
+        printf("PID read timed out\n");
         return 0;
     } else if (ret == -1) {
         perror("Select");
@@ -121,7 +121,7 @@ int read_unix_socket(int sfd, std::function<void (char*)> read_func, std::functi
             timeout.tv_usec = 100e3;
             int ret = select(cfd + 1, &input, NULL, NULL, &timeout);
             if (!ret) {
-                printf("Timed out\n");
+                printf("socket read timed out\n");
                 continue;
             } else if (ret == -1) {
                 perror("Select");
@@ -130,7 +130,7 @@ int read_unix_socket(int sfd, std::function<void (char*)> read_func, std::functi
             numRead = read(cfd, &message_buf, msgSize);
             if (numRead != msgSize) {
                 perror("read failed");
-                printf("numRead: %ld \n", numRead);
+                printf("numRead: %u \n", numRead);
                 if (!read_failed_func()) {
                     exit(EXIT_FAILURE);
                 }

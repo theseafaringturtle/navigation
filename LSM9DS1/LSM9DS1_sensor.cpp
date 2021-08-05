@@ -60,10 +60,10 @@ void LSM9DS1_Sensor::has_sample(float gx, float gy, float gz, float ax, float ay
 {
     timespec ts;
     clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-    unsigned long timestamp_us = ts.tv_sec * 1e6 + ts.tv_nsec / 1e3;
+    unsigned long timestamp_us = (unsigned long) (ts.tv_sec * 1e6) + (unsigned long) (ts.tv_nsec / 1e3);
     std::lock_guard<std::mutex> lock(m_mutex);
-    LSM9DS1_Message gyro_message = {'L', timestamp_us, ax, gz};
-    m_queue.push(gyro_message);
+    LSM9DS1_Message xg_message = {'L', timestamp_us, ax, gz};
+    m_queue.push(xg_message);
 }
 
 void LSM9DS1_Sensor::run()
