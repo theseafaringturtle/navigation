@@ -1,6 +1,10 @@
 .vscode/
-LSM9DS1/LSM9DS1_client
-consumer
+LSM9DS1/bin/
+Encoder/bin
+bin/
+LSM9DS1/library/CMakeFiles/
+LSM9DS1/library/liblsm9ds1.so
+LSM9DS1/library/liblsm9ds1.so.1
 
 # Created by https://www.gitignore.io/api/osx,linux,windows
 
