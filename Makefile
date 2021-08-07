@@ -1,10 +1,12 @@
 CPP = g++
-.PHONY: all
+.PHONY: all clean
 all: consumer
 CPP_FILES=consumer.cpp comm/socket_setup.hpp comm/imu_comm_data.h comm/encoders_comm_data.h
+
+consumer.o: $(CPP_FILES)
 
 clean: 
 	rm consumer
 
-consumer: 
-	$(CPP) -J4 -g -DDEBUG -Wall -O2 $(CPP_FILES) -o consumer -std=c++17 -lrt -lpthread
+consumer: consumer.o
+	$(CPP) -g -DDEBUG -Wall -O2 consumer.o -o consumer -std=c++17 -lrt -lpthread
