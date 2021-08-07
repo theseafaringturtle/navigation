@@ -7,12 +7,13 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-
 #include <thread>
 
 #include "Encoder/dual_encoder.h"
 #include "comm/imu_comm_data.h"
 #include "comm/socket_setup.hpp"
+#include "consumer.h"
+#include "sensor_message_reader.h"
 
 #define ENCODERS_RESTART_PATH "/home/pi/restart_encoders"
 #define IMU_RESTART_PATH "/home/pi/restart_imu"  // create a new file for i2c script to check if it needs to restart
@@ -21,25 +22,6 @@
 int current_reading = 0;
 bool calibrating = false;
 
-int write_restart_message_imu(void) {
-    int fd = open(IMU_RESTART_PATH, O_WRONLY | O_CREAT, 0600);
-    if (!fd) {
-        perror("restart");
-        return 0;
-    }
-    close(fd);
-    return 1;
-}
-
-int write_restart_message_encoders(void) {
-    int fd = open(ENCODERS_RESTART_PATH, O_WRONLY | O_CREAT, 0600);
-    if (!fd) {
-        perror("restart");
-        return 0;
-    }
-    close(fd);
-    return 1;
-}
 
 void read_LSM9DS1_data(void* message_buf) {
     LSM9DS1_Message* message = static_cast<LSM9DS1_Message*>(message_buf);
@@ -68,12 +50,13 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // TODO clean exit
-    std::thread imu_reader_thread (&read_unix_socket, imu_sfd, read_LSM9DS1_data, write_restart_message_imu, LSM9DS1_MESSAGE_SIZE);
-    std::thread encoder_reader_thread(&read_unix_socket, encoders_sfd, read_encoder_data, write_restart_message_encoders, ENCODERS_MESSAGE_SIZE);
-
-    imu_reader_thread.join();
-    encoder_reader_thread.join();
+    SensorMessageReader imu_reader(imu_sfd, IMU_RESTART_PATH, LSM9DS1_MESSAGE_SIZE, read_LSM9DS1_data);
+    imu_reader.start();
+    SensorMessageReader encoders_reader(encoders_sfd, ENCODERS_RESTART_PATH, ENCODERS_MESSAGE_SIZE, read_encoder_data);
+    encoders_reader.start();
+    getchar();
+    imu_reader.stop();
+    encoders_reader.stop();
 
     return 0;
 }

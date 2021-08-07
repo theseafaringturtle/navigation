@@ -10,7 +10,8 @@ OBJ=$(BIN)/obj
 LIBRARIES=-lrt -lpthread
 
 SOURCE_FILES=\
-    consumer.cpp
+    consumer.cpp\
+	sensor_message_reader.cpp
 
 EXECUTABLE_FILE = $(EXECUTABLE_NAME:%=$(BIN)/%)
 OBJECT_FILES    = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
