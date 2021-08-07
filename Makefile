@@ -1,12 +1,30 @@
-CPP = g++
-.PHONY: all clean
-all: consumer
-CPP_FILES=consumer.cpp comm/socket_setup.hpp comm/imu_comm_data.h comm/encoders_comm_data.h
+CC=g++
+CFLAGS=-c -Wall -O2 -std=c++11
+LDFLAGS=
+EXECUTABLE_NAME=consumer
 
-consumer.o: $(CPP_FILES)
+SRC=.
+BIN=bin
+OBJ=$(BIN)/obj
 
-clean: 
-	rm consumer
+LIBRARIES=-lrt -lpthread
 
-consumer: consumer.o
-	$(CPP) -g -DDEBUG -Wall -O2 consumer.o -o consumer -std=c++17 -lrt -lpthread
+SOURCE_FILES=\
+    consumer.cpp
+
+EXECUTABLE_FILE = $(EXECUTABLE_NAME:%=$(BIN)/%)
+OBJECT_FILES    = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
+
+build: $(EXECUTABLE_FILE)
+
+clean:
+	rm -rf $(BIN)
+
+.PHONY: build clean
+
+$(EXECUTABLE_FILE): $(OBJECT_FILES)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBRARIES)
+
+$(OBJECT_FILES): $(OBJ)/%.o: %.cpp
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -o $@ $< 

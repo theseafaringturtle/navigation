@@ -1,14 +1,31 @@
-CPP = g++
-.PHONY: all clean
-all: Encoder_Sensor
-CPP_FILES = main.cpp dual_encoder.h dual_encoder.cpp ../comm/sensor.hpp ../comm/encoders_comm_data.h
+CC=g++
+CFLAGS=-c -Wall -O2 -std=c++11
+LDFLAGS=
+EXECUTABLE_NAME=Encoder_Sensor
 
-dual_encoder.o: dual_encoder.cpp dual_encoder.h ../comm/encoders_comm_data.h
-main.o: main.cpp
-OBJECTS=dual_encoder.o main.o
+SRC=.
+BIN=bin
+OBJ=$(BIN)/obj
 
-Encoder_Sensor: $(OBJECTS)
-	$(CPP) -g -DDEBUG $(OBJECTS) -Wall -o Encoder_Sensor -lrt -lpthread -std=c++17
+LIBRARIES=-lrt -lpthread
+
+SOURCE_FILES=\
+    main.cpp \
+    dual_encoder.cpp
+
+EXECUTABLE_FILE = $(EXECUTABLE_NAME:%=$(BIN)/%)
+OBJECT_FILES    = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
+
+build: $(EXECUTABLE_FILE)
 
 clean:
-	rm -f Encoder_Sensor
+	rm -rf $(BIN)
+
+.PHONY: build clean
+
+$(EXECUTABLE_FILE): $(OBJECT_FILES)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBRARIES)
+
+$(OBJECT_FILES): $(OBJ)/%.o: %.cpp
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -o $@ $< 

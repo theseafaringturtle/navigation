@@ -1,14 +1,32 @@
-CPP = g++
-.PHONY: all clean
-all: LSM9DS1_Sensor
-CPP_FILES = main.cpp LSM9DS1_sensor.cpp LSM9DS1_sensor.h LSM9DS1_utils.h LSM9DS1_utils.cpp ../comm/sensor.hpp ../comm/imu_comm_data.h
+CC=g++
+CFLAGS=-c -Wall -O2 -std=c++11
+LDFLAGS=-Wl,-rpath=./library -L./library 
+EXECUTABLE_NAME=LSM9DS1_Sensor
 
-LSM9DS1_sensor.o: LSM9DS1_sensor.cpp LSM9DS1_sensor.h
-LSM9DS1_utils.o: LSM9DS1_utils.cpp LSM9DS1_utils.h
-main.o: main.cpp
+SRC=.
+BIN=bin
+OBJ=$(BIN)/obj
 
-LSM9DS1_Sensor: LSM9DS1_sensor.o LSM9DS1_utils.o main.o
-	$(CPP) -g -DDEBUG LSM9DS1_sensor.o LSM9DS1_utils.o main.o -Wall -O2 -Wl,-rpath=./library -L./library  -o LSM9DS1_client -llsm9ds1 -lrt -lpthread -std=c++17
+LIBRARIES=-lrt -lpthread -llsm9ds1 
+
+SOURCE_FILES=\
+    main.cpp \
+    LSM9DS1_sensor.cpp \
+	LSM9DS1_utils.cpp
+
+EXECUTABLE_FILE = $(EXECUTABLE_NAME:%=$(BIN)/%)
+OBJECT_FILES    = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
+
+build: $(EXECUTABLE_FILE)
 
 clean:
-	rm -f LSM9DS1_Sensor
+	rm -rf $(BIN)
+
+.PHONY: build clean
+
+$(EXECUTABLE_FILE): $(OBJECT_FILES)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBRARIES)
+
+$(OBJECT_FILES): $(OBJ)/%.o: %.cpp
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -o $@ $< 
