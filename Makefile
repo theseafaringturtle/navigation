@@ -11,7 +11,8 @@ LIBRARIES=-lrt -lpthread
 
 SOURCE_FILES=\
     consumer.cpp\
-	sensor_message_reader.cpp
+	sensor_message_reader.cpp\
+	state.cpp
 
 EXECUTABLE_FILE = $(EXECUTABLE_NAME:%=$(BIN)/%)
 OBJECT_FILES    = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)

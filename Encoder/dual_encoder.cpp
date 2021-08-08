@@ -53,7 +53,7 @@ void DualEncoder_Sensor::reader_thread(bool left)
     {
         FD_ZERO(&input);
         FD_SET(ifd, &input);
-        timeout.tv_sec = 5;
+        timeout.tv_sec = 1;
         timeout.tv_usec = 0;
         int ret = select(ifd + 1, &input, NULL, NULL, &timeout);
         if (!ret)
