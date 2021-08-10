@@ -9,8 +9,12 @@ void State::read_LSM9DS1_data(void *message_buf)
     LSM9DS1_Message *message = static_cast<LSM9DS1_Message *>(message_buf);
     if (this->check_need_imu_calibration(message))
     {
-        imu_calibrating = true;
-        // kill(producer_pid, SIGUSR1);
+        if(imu_pid) {
+            imu_calibrating = true;
+            kill(*imu_pid, SIGUSR1);
+        } else {
+            printf("Could not trigger recalibration: missing PID\n");
+        }
     }
     printf("Message from %c: %f at time %lu\n", message->sensor, message->acc_x, message->timestamp);
 }
@@ -24,4 +28,9 @@ void State::read_encoder_data(void *message_buf)
 bool State::check_need_imu_calibration(LSM9DS1_Message *message)
 {
     return message->timestamp - last_timestamp_imu > 5e6 && (message->acc_x > RECALIBRATION_THRESHOLD || -message->gyro_z < RECALIBRATION_THRESHOLD);
+}
+
+State::~State() {
+    delete imu_pid;
+    delete encoders_pid;
 }

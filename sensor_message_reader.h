@@ -5,7 +5,6 @@ class SensorMessageReader
 {
 private:
     std::thread _thread;
-    int producer_pid;
     const char *restart_path;
     int sfd;
     std::function<void(char *)> read_func;
@@ -20,5 +19,5 @@ public:
     SensorMessageReader(int file_desc, const char *restart_path, size_t message_size, std::function<void(void *)> read_func);
     void start();
     void stop();
-    pid_t get_producer_pid();
+    pid_t producer_pid;
 };

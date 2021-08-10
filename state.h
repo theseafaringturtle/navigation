@@ -1,3 +1,4 @@
+#include <signal.h>
 
 #define RECALIBRATION_THRESHOLD 0.6
 
@@ -14,8 +15,13 @@ public:
     unsigned long last_timestamp_encoders = 0;
     bool imu_calibrating = false;
 
+    pid_t* imu_pid = 0;
+    pid_t* encoders_pid = 0;
+
     void read_LSM9DS1_data(void *message_buf);
     void read_encoder_data(void *message_buf);
 
     bool check_need_imu_calibration(LSM9DS1_Message* message);
+
+    ~State();
 };

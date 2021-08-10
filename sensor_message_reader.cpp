@@ -29,10 +29,6 @@ void SensorMessageReader::stop()
     running = false;
     _thread.join();
 }
-pid_t SensorMessageReader::get_producer_pid()
-{
-    return producer_pid;
-}
 
 int SensorMessageReader::write_restart_message()
 {
