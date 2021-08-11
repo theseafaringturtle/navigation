@@ -15,7 +15,7 @@ public:
     unsigned long last_timestamp_encoders = 0;
     bool imu_calibrating = false;
 
-    pid_t* imu_pid = 0;
+    pid_t* imu_pid;
     pid_t* encoders_pid = 0;
 
     void read_LSM9DS1_data(void *message_buf);

@@ -9,7 +9,7 @@ void State::read_LSM9DS1_data(void *message_buf)
     LSM9DS1_Message *message = static_cast<LSM9DS1_Message *>(message_buf);
     if (this->check_need_imu_calibration(message))
     {
-        if(imu_pid) {
+        if(*imu_pid) {
             imu_calibrating = true;
             kill(*imu_pid, SIGUSR1);
         } else {

@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall -O2 -std=c++11
+CFLAGS=-c -Wall -O2 -g -std=c++11
 LDFLAGS=
 EXECUTABLE_NAME=Encoder_Sensor
 

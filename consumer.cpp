@@ -33,12 +33,12 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     State state;
-    std::function<void(void*)> imu_callback = std::bind(&State::read_LSM9DS1_data, state, std::placeholders::_1);
+    std::function<void(void*)> imu_callback = std::bind(&State::read_LSM9DS1_data, &state, std::placeholders::_1);
     SensorMessageReader imu_reader(imu_sfd, IMU_RESTART_PATH, LSM9DS1_MESSAGE_SIZE, imu_callback);
     state.imu_pid = &imu_reader.producer_pid;
     imu_reader.start();
 
-    std::function<void(void*)> encoder_callback = std::bind(&State::read_encoder_data, state, std::placeholders::_1);
+    std::function<void(void*)> encoder_callback = std::bind(&State::read_encoder_data, &state, std::placeholders::_1);
     SensorMessageReader encoders_reader(encoders_sfd, ENCODERS_RESTART_PATH, ENCODERS_MESSAGE_SIZE, encoder_callback);
     state.encoders_pid = &encoders_reader.producer_pid;
     encoders_reader.start();
